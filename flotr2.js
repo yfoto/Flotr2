@@ -1596,7 +1596,7 @@ global.Flotr = Flotr;
 })();
 
 /**
- * Flotr Defaults
+ * Flotr Defaults 
  */
 Flotr.defaultOptions = {
   colors: ['#00A8F0', '#C0D800', '#CB4B4B', '#4DA74D', '#9440ED'], //=> The default colorscheme. When there are > 5 series, additional colors are generated.
@@ -1631,7 +1631,7 @@ Flotr.defaultOptions = {
     mode: 'normal',        // => can be 'time' or 'normal'
     timeFormat: null,
     timeMode:'UTC',        // => For UTC time ('local' for local time).
-    timeUnit:'millisecond',// => Unit for time (millisecond, second, minute, hour, day, month, year)
+    timeUnit:'millisecond',// => Unit for time (millisecond, second, minute, hour, day, month, year)
     scaling: 'linear',     // => Scaling, can be 'linear' or 'logarithmic'
     base: Math.E,
     titleAlign: 'center',
@@ -4679,6 +4679,27 @@ Flotr.addType('markers', {
       }
     }
 
+	minVal=data[0][1];
+	minIndex=0;
+	maxVal=data[0][1];
+	maxIndex=0;
+	
+	for (i = 0; i < data.length; ++i) {
+      y = data[i][1];
+	  if (y>maxVal){
+		  maxIndex=i;
+		  maxVal=y;
+	  }
+	}
+	
+	for (i = 0; i < data.length; ++i) {
+      y = data[i][1];
+	  if (y<minVal){
+		  minIndex=i;
+		  minVal=y;
+	  }
+	}
+	
     for (i = 0; i < data.length; ++i) {
     
       x = data[i][0];
@@ -4696,7 +4717,18 @@ Flotr.addType('markers', {
       }
 
       label = options.labelFormatter({x: x, y: y, index: i, data : data});
-      this.plot(options.xScale(x), options.yScale(y), label, options);
+	  if(i==minIndex||i==maxIndex){
+		  if (i==0){
+			  options.position='rm';
+			  this.plot(options.xScale(x), options.yScale(y), label, options);			  
+		  }else if (i==data.length-1){
+			  options.position='lm';
+			  this.plot(options.xScale(x), options.yScale(y), label, options);			  
+		  }else{
+			  this.plot(options.xScale(x), options.yScale(y), label, options);
+		  }		  
+	  }
+      
     }
     context.restore();
   },
@@ -4711,7 +4743,7 @@ Flotr.addType('markers', {
 
   _plot: function(x, y, label, options) {
     var context = options.context,
-        margin = 2,
+        margin = 4,
         left = x,
         top = y,
         dim;
@@ -4735,10 +4767,10 @@ Flotr.addType('markers', {
     top = Math.floor(top)+0.5;
     
     if(options.fill)
-      context.fillRect(left, top, dim.width, dim.height);
+      context.fillRect(left, top, dim.width*2, dim.height);
       
     if(options.stroke)
-      context.strokeRect(left, top, dim.width, dim.height);
+      context.strokeRect(left, top, dim.width*2, dim.height);
     
     if (isImage(label))
       context.drawImage(label, parseInt(left+margin, 10), parseInt(top+margin, 10));
@@ -6852,7 +6884,9 @@ Flotr.addPlugin('spreadsheet', {
     
     // First row : series' labels
     var html = ['<table class="flotr-datagrid"><tr class="first-row">'];
-    html.push('<th>&nbsp;</th>');
+    html.push('<th>');
+	html.push(this.options.xaxis.title);
+	html.push('</th>');
     _.each(s, function(serie,i){
       html.push('<th scope="col">'+(serie.label || String.fromCharCode(65+i))+'</th>');
       colgroup.push('<col />');
